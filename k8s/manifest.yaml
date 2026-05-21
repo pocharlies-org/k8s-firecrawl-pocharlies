@@ -1,0 +1,98 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: skirmshop
+  labels:
+    cnpg-backup: "true"   # triggers ClusterExternalSecret minio-backup-creds
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firecrawl-api
+  namespace: skirmshop
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: firecrawl-api } }
+  template:
+    metadata: { labels: { app: firecrawl-api } }
+    spec:
+      enableServiceLinks: false
+      # firecrawl harness segfaults on x86 due to Go CGo runtime race in libhtml-to-markdown.so
+      # when multiple worker processes start simultaneously — stable on ARM64
+      nodeSelector: { topology: lan, kubernetes.io/arch: arm64 }
+      containers:
+        - name: firecrawl-api
+          image: ghcr.io/firecrawl/firecrawl:latest
+          ports: [{ name: http, containerPort: 3002 }]
+          env:
+            - { name: REDIS_URL, value: "redis://labels-redis.skirmshop.svc.cluster.local:6379" }
+            - { name: REDIS_RATE_LIMIT_URL, value: "redis://labels-redis.skirmshop.svc.cluster.local:6379" }
+            - { name: ENV, value: "local" }   # limits API cluster workers to 2 (vs all 20 CPUs on dgx)
+            - { name: HOST, value: "0.0.0.0" }  # bind to all interfaces so k8s probes can reach port 3002
+            - { name: PORT, value: "3002" }
+            - { name: PLAYWRIGHT_MICROSERVICE_URL, value: "http://firecrawl-playwright.skirmshop.svc.cluster.local:3000/scrape" }
+            - { name: USE_DB_AUTHENTICATION, value: "false" }
+            - name: _RMQUSER
+              valueFrom: { secretKeyRef: { name: rabbitmq-secrets, key: RABBITMQ_DEFAULT_USER } }
+            - name: _RMQPASS
+              valueFrom: { secretKeyRef: { name: rabbitmq-secrets, key: RABBITMQ_DEFAULT_PASS } }
+            - name: RABBITMQ_URL
+              value: "amqp://$(_RMQUSER):$(_RMQPASS)@shared-rabbitmq.skirmshop.svc.cluster.local:5672"
+            - name: NUQ_RABBITMQ_URL
+              value: "amqp://$(_RMQUSER):$(_RMQPASS)@shared-rabbitmq.skirmshop.svc.cluster.local:5672"
+            - { name: POSTGRES_HOST, value: "shared-postgres-rw.skirmshop.svc.cluster.local" }
+            - { name: POSTGRES_PORT, value: "5432" }
+            - { name: POSTGRES_DB, value: "firecrawl" }
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: shared-postgres-app, key: username } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: shared-postgres-app, key: password } }
+            - name: NUQ_DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+          envFrom: [{ secretRef: { name: labels-secrets } }]
+          resources:
+            requests: { cpu: 200m, memory: 512Mi }
+            limits:   { memory: 3Gi }
+          readinessProbe:
+            httpGet: { path: /, port: 3002 }
+            initialDelaySeconds: 30
+---
+---
+apiVersion: v1
+kind: Service
+metadata: { name: firecrawl-api, namespace: skirmshop }
+spec:
+  selector: { app: firecrawl-api }
+  ports: [{ name: http, port: 3002, targetPort: 3002 }]
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firecrawl-playwright
+  namespace: skirmshop
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: firecrawl-playwright } }
+  template:
+    metadata: { labels: { app: firecrawl-playwright } }
+    spec:
+      enableServiceLinks: false
+      nodeSelector: { topology: lan, kubernetes.io/arch: amd64 }
+      containers:
+        - name: playwright
+          image: ghcr.io/firecrawl/playwright-service:latest
+          ports: [{ name: http, containerPort: 3000 }]
+          resources:
+            requests: { cpu: 100m, memory: 512Mi }
+            limits:   { memory: 2Gi }
+---
+---
+apiVersion: v1
+kind: Service
+metadata: { name: firecrawl-playwright, namespace: skirmshop }
+spec:
+  selector: { app: firecrawl-playwright }
+  ports: [{ name: http, port: 3000, targetPort: 3000 }]
