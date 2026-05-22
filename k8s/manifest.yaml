@@ -11,16 +11,14 @@ metadata:
   name: firecrawl-api
   namespace: skirmshop
 spec:
-  replicas: 0
+  replicas: 1
   selector: { matchLabels: { app: firecrawl-api } }
   template:
     metadata: { labels: { app: firecrawl-api } }
     spec:
       enableServiceLinks: false
-      # Disabled on DGX-reserved cluster: this workload is stable only on ARM64
-      # and DGX/DGX2 are reserved for LLM workloads plus mandatory system agents.
-      # Do not re-enable here until there is a non-DGX ARM64 node or the x86
-      # libhtml-to-markdown.so crash is fixed and revalidated.
+      # Keep this on ARM64 until the x86 libhtml-to-markdown.so crash is fixed
+      # and revalidated.
       nodeSelector: { topology: lan, kubernetes.io/arch: arm64 }
       containers:
         - name: firecrawl-api
