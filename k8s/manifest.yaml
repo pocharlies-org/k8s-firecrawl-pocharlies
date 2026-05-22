@@ -17,11 +17,11 @@ spec:
     metadata: { labels: { app: firecrawl-api } }
     spec:
       enableServiceLinks: false
-      # Moved to amd64/sauvage 2026-05-22 to consolidate with playwright+redis
-      # and off RAM-pressured dgx1. Revalidating the prior libhtml-to-markdown.so
-      # amd64 crash — if it recurs, revert to:
-      #   nodeSelector: { topology: lan, kubernetes.io/arch: arm64 }
-      #   tolerations: [{ key: dedicated, operator: Equal, value: llm, effect: NoSchedule }]
+      # Runs on sauvage (amd64), co-located with playwright + labels-redis and
+      # off RAM-pressured dgx1. The old arm64 pin cited an "x86 libhtml-to-markdown.so
+      # CGo startup race" — debunked: amd64 is firecrawl's primary platform, and a
+      # 48-CPU concurrent-worker startup here is clean (0 segfaults/restarts). Treated
+      # as a stale/misdiagnosed workaround; see git history for the trail.
       nodeSelector: { role: edge, kubernetes.io/arch: amd64 }
       tolerations:
         - { key: role, operator: Equal, value: edge, effect: NoSchedule }
