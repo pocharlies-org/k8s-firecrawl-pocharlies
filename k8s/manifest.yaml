@@ -20,6 +20,8 @@ spec:
       # Keep this on ARM64 until the x86 libhtml-to-markdown.so crash is fixed
       # and revalidated.
       nodeSelector: { topology: lan, kubernetes.io/arch: arm64 }
+      tolerations:
+        - { key: dedicated, operator: Equal, value: llm, effect: NoSchedule }
       containers:
         - name: firecrawl-api
           image: ghcr.io/firecrawl/firecrawl:latest
