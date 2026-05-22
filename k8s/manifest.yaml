@@ -93,7 +93,7 @@ spec:
       containers:
         - name: playwright
           image: ghcr.io/firecrawl/playwright-service@sha256:9e0737bc09df28275aab29726b1c0824a7725113945434e843385d487b7f7ec6
-          ports: [{ name: http, containerPort: 3000 }]
+          ports: [{ name: http, containerPort: 3003 }]
           resources:
             requests: { cpu: 100m, memory: 512Mi }
             limits:   { memory: 2Gi }
@@ -104,7 +104,7 @@ kind: Service
 metadata: { name: firecrawl-playwright, namespace: skirmshop }
 spec:
   selector: { app: firecrawl-playwright }
-  ports: [{ name: http, port: 3000, targetPort: 3000 }]
+  ports: [{ name: http, port: 3000, targetPort: 3003 }]
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
