@@ -30,6 +30,7 @@ spec:
             - { name: REDIS_URL, value: "redis://labels-redis.skirmshop.svc.cluster.local:6379" }
             - { name: REDIS_RATE_LIMIT_URL, value: "redis://labels-redis.skirmshop.svc.cluster.local:6379" }
             - { name: ENV, value: "local" }   # limits API cluster workers to 2 (vs all 20 CPUs on dgx)
+            - { name: IS_KUBERNETES, value: "true" }  # use cgroup limits for Firecrawl load checks
             - { name: HOST, value: "0.0.0.0" }  # bind to all interfaces so k8s probes can reach port 3002
             - { name: PORT, value: "3002" }
             - { name: PLAYWRIGHT_MICROSERVICE_URL, value: "http://firecrawl-playwright.skirmshop.svc.cluster.local:3000/scrape" }
