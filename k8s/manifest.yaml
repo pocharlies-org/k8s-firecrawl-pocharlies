@@ -13,14 +13,16 @@ metadata:
   name: firecrawl-api
   namespace: skirmshop
 spec:
-  replicas: 1
+  replicas: 0
   selector: { matchLabels: { app: firecrawl-api } }
   template:
     metadata: { labels: { app: firecrawl-api } }
     spec:
       enableServiceLinks: false
-      # firecrawl harness segfaults on x86 due to Go CGo runtime race in libhtml-to-markdown.so
-      # when multiple worker processes start simultaneously — stable on ARM64
+      # Disabled on DGX-reserved cluster: this workload is stable only on ARM64
+      # and DGX/DGX2 are reserved for LLM workloads plus mandatory system agents.
+      # Do not re-enable here until there is a non-DGX ARM64 node or the x86
+      # libhtml-to-markdown.so crash is fixed and revalidated.
       nodeSelector: { topology: lan, kubernetes.io/arch: arm64 }
       containers:
         - name: firecrawl-api
@@ -80,7 +82,9 @@ spec:
     metadata: { labels: { app: firecrawl-playwright } }
     spec:
       enableServiceLinks: false
-      nodeSelector: { topology: lan, kubernetes.io/arch: amd64 }
+      nodeSelector: { role: edge, kubernetes.io/arch: amd64 }
+      tolerations:
+        - { key: role, operator: Equal, value: edge, effect: NoSchedule }
       containers:
         - name: playwright
           image: ghcr.io/firecrawl/playwright-service:latest
