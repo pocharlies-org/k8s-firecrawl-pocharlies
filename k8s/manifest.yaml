@@ -125,7 +125,7 @@ spec:
         - name: firecrawl-api
           port: 3002
   tls:
-    store: { name: default, namespace: traefik-lan }
+    store: { name: default, namespace: traefik-edge }
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
@@ -140,4 +140,5 @@ spec:
       services:
         - name: firecrawl-api
           port: 3002
-  tls: {}
+  tls:
+    store: { name: default, namespace: traefik-lan }
