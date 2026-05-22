@@ -49,12 +49,18 @@ spec:
               valueFrom: { secretKeyRef: { name: shared-postgres-app, key: username } }
             - name: POSTGRES_PASSWORD
               valueFrom: { secretKeyRef: { name: shared-postgres-app, key: password } }
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+            - name: POSTGRES_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+            - name: PG_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: NUQ_DATABASE_URL
               value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
           envFrom: [{ secretRef: { name: labels-secrets } }]
           resources:
             requests: { cpu: 200m, memory: 512Mi }
-            limits:   { memory: 3Gi }
+            limits:   { memory: 6Gi }
           readinessProbe:
             httpGet: { path: /, port: 3002 }
             initialDelaySeconds: 30
