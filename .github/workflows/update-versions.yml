@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   update:
-    runs-on: arc-firecrawl
+    runs-on: arc-k8s
     steps:
       - uses: actions/checkout@v4
 
