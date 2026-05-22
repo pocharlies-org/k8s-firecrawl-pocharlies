@@ -17,11 +17,14 @@ spec:
     metadata: { labels: { app: firecrawl-api } }
     spec:
       enableServiceLinks: false
-      # Keep this on ARM64 until the x86 libhtml-to-markdown.so crash is fixed
-      # and revalidated.
-      nodeSelector: { topology: lan, kubernetes.io/arch: arm64 }
+      # Moved to amd64/sauvage 2026-05-22 to consolidate with playwright+redis
+      # and off RAM-pressured dgx1. Revalidating the prior libhtml-to-markdown.so
+      # amd64 crash — if it recurs, revert to:
+      #   nodeSelector: { topology: lan, kubernetes.io/arch: arm64 }
+      #   tolerations: [{ key: dedicated, operator: Equal, value: llm, effect: NoSchedule }]
+      nodeSelector: { role: edge, kubernetes.io/arch: amd64 }
       tolerations:
-        - { key: dedicated, operator: Equal, value: llm, effect: NoSchedule }
+        - { key: role, operator: Equal, value: edge, effect: NoSchedule }
       containers:
         - name: firecrawl-api
           image: ghcr.io/firecrawl/firecrawl@sha256:11c96ce5e43eb1eadbabe9d370c89e4246b78ffb204910aef49a94e9ee02dde0
