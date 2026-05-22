@@ -125,3 +125,20 @@ spec:
         - name: firecrawl-api
           port: 3002
   tls: {}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: firecrawl-lan
+  namespace: skirmshop
+spec:
+  entryPoints: [websecure]
+  ingressClassName: traefik-lan
+  routes:
+    - match: Host(`firecrawl.lan.e-dani.com`)
+      kind: Rule
+      services:
+        - name: firecrawl-api
+          port: 3002
+  tls:
+    secretName: wildcard-lan-tls
