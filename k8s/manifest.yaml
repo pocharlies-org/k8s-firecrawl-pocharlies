@@ -25,6 +25,17 @@ spec:
       nodeSelector: { role: edge, kubernetes.io/arch: amd64 }
       tolerations:
         - { key: role, operator: Equal, value: edge, effect: NoSchedule }
+      initContainers:
+        - name: wait-for-shared-rabbitmq
+          image: docker.io/library/busybox:1.36
+          command:
+            - sh
+            - -ec
+            - |
+              until nc -z shared-rabbitmq.databases.svc.cluster.local 5672; do
+                echo "waiting for shared-rabbitmq:5672"
+                sleep 2
+              done
       containers:
         - name: firecrawl-api
           image: ghcr.io/firecrawl/firecrawl@sha256:11c96ce5e43eb1eadbabe9d370c89e4246b78ffb204910aef49a94e9ee02dde0
