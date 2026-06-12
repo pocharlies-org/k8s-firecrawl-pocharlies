@@ -152,7 +152,12 @@ spec:
         - name: scripts
           configMap: { name: firecrawl-valkey-scripts, defaultMode: 0755 }
   volumeClaimTemplates:
-    - metadata:
+    # apiVersion/kind explícitos: el apiserver los persiste y VCT es atómico e
+    # inmutable bajo SSA — sin TypeMeta en git el diff de ArgoCD nunca converge
+    # y selfHeal re-aplica el STS cada 5 min para siempre.
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
         name: data
       spec:
         accessModes: ["ReadWriteOnce"]
