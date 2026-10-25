@@ -22,7 +22,7 @@ spec:
       # CGo startup race" — debunked: amd64 is firecrawl's primary platform, and a
       # 48-CPU concurrent-worker startup here is clean (0 segfaults/restarts). Treated
       # as a stale/misdiagnosed workaround; see git history for the trail.
-      nodeSelector: { role: edge, kubernetes.io/arch: amd64 }
+      nodeSelector: { kubernetes.io/arch: amd64 }
       tolerations:
         - { key: role, operator: Equal, value: edge, effect: NoSchedule }
       initContainers:
@@ -103,7 +103,7 @@ spec:
     metadata: { labels: { app: firecrawl-playwright } }
     spec:
       enableServiceLinks: false
-      nodeSelector: { role: edge, kubernetes.io/arch: amd64 }
+      nodeSelector: { kubernetes.io/arch: amd64 }
       tolerations:
         - { key: role, operator: Equal, value: edge, effect: NoSchedule }
       containers:
